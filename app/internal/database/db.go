@@ -1,17 +1,19 @@
 package database
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func Connect() {
-	err := godotenv.Load()
+func Connect() (*gorm.DB, error) {
+	err := godotenv.Load("../../../docker/.env")
 	if err != nil {
+		fmt.Println("Ошибка:", err)
 		log.Fatal("Error loading .env file")
 	}
 	dbHost := os.Getenv("DB_HOST")
@@ -19,24 +21,15 @@ func Connect() {
 	dbUser := os.Getenv("DB_USER")
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
-	dbType := os.Getenv("DB_TYPE")
-
-	// Формирование строки подключения
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s",
-		dbHost, dbPort, dbUser, dbPassword, dbName)
-
-	// Подключение к базе данных
-	db, err := sql.Open(dbType, connStr)
+	dbUrl := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s",
+		dbHost, dbUser, dbPassword, dbName, dbPort,
+	)
+	db, err := gorm.Open(postgres.Open(dbUrl), &gorm.Config{})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to connect to database:", err)
+		return nil, err
 	}
-	defer db.Close()
-
-	// Проверка подключения
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println("Successfully connected to the database!")
+	log.Println("Connected to database!")
+	return db, nil
 }
