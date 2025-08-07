@@ -1,0 +1,162 @@
+definitions:
+  controllers.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  controllers.LogoutResponse:
+    properties:
+      Status:
+        example: success LogOut
+        type: string
+    type: object
+  controllers.TokenPairResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      refresh_token:
+        example: dGhpcyBpcyBhbiBleGFtcGxlIG9mIHJlZnJlc2ggdG9rZW4=
+        type: string
+    type: object
+  controllers.UserIDResponse:
+    properties:
+      user_id:
+        example: 0
+        type: integer
+    type: object
+host: 127.0.0.1:8000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a MEDODS server.
+  termsOfService: http://swagger.io/terms/
+  title: Gin Swagger API
+  version: "1.0"
+paths:
+  /auth/tokens/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Generates new access and refresh tokens for unauthenticated user.
+        Requires user ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New tokens pair
+          schema:
+            $ref: '#/definitions/controllers.TokenPairResponse'
+        "400":
+          description: Bad Request - missing user ID or already authorized
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "404":
+          description: Not Found - user not found
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "425":
+          description: Too Early - user already has valid access token
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+      summary: Get JWT tokens
+      tags:
+      - authentication
+  /get_id:
+    get:
+      description: Get ID of auth-ed user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный ответ
+          schema:
+            $ref: '#/definitions/controllers.UserIDResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+      summary: Get ID of current user
+      tags:
+      - users
+  /logout:
+    post:
+      description: Invalidates the current refresh token and clears access token cookie.
+        Requires valid access token.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful logout
+          schema:
+            $ref: '#/definitions/controllers.LogoutResponse'
+        "400":
+          description: Bad Request - invalid token or parsing error
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "401":
+          description: Unauthorized - access token not provided
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "500":
+          description: Internal Server Error - database or env file error
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+      summary: Log out user
+      tags:
+      - authentication
+  /update_tokens:
+    post:
+      description: Refreshes both access and refresh tokens. Validates current tokens,
+        checks User-Agent/IP consistency, and issues new tokens.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New tokens pair
+          schema:
+            $ref: '#/definitions/controllers.TokenPairResponse'
+        "400":
+          description: Bad Request - invalid token or parsing error
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "401":
+          description: Unauthorized - access token not provided
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "403":
+          description: Forbidden - User-Agent mismatch
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "404":
+          description: Not Found - refresh token not found
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+        "500":
+          description: Internal Server Error - database or env file error
+          schema:
+            $ref: '#/definitions/controllers.ErrorResponse'
+      summary: Update access and refresh tokens
+      tags:
+      - authentication
+schemes:
+- http
+swagger: "2.0"

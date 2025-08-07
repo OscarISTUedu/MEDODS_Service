@@ -1,0 +1,240 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a MEDODS server.",
+        "title": "Gin Swagger API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "version": "1.0"
+    },
+    "host": "127.0.0.1:8000",
+    "paths": {
+        "/auth/tokens/{id}": {
+            "get": {
+                "description": "Generates new access and refresh tokens for unauthenticated user. Requires user ID.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Get JWT tokens",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "New tokens pair",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.TokenPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - missing user ID or already authorized",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - user not found",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "425": {
+                        "description": "Too Early - user already has valid access token",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/get_id": {
+            "get": {
+                "description": "Get ID of auth-ed user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get ID of current user",
+                "responses": {
+                    "200": {
+                        "description": "Успешный ответ",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.UserIDResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "description": "Invalidates the current refresh token and clears access token cookie. Requires valid access token.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Log out user",
+                "responses": {
+                    "200": {
+                        "description": "Successful logout",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.LogoutResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - invalid token or parsing error",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - access token not provided",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - database or env file error",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/update_tokens": {
+            "post": {
+                "description": "Refreshes both access and refresh tokens. Validates current tokens, checks User-Agent/IP consistency, and issues new tokens.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "authentication"
+                ],
+                "summary": "Update access and refresh tokens",
+                "responses": {
+                    "200": {
+                        "description": "New tokens pair",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.TokenPairResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request - invalid token or parsing error",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - access token not provided",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - User-Agent mismatch",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found - refresh token not found",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error - database or env file error",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "controllers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "Status": {
+                    "type": "string",
+                    "example": "success LogOut"
+                }
+            }
+        },
+        "controllers.TokenPairResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "dGhpcyBpcyBhbiBleGFtcGxlIG9mIHJlZnJlc2ggdG9rZW4="
+                }
+            }
+        },
+        "controllers.UserIDResponse": {
+            "type": "object",
+            "properties": {
+                "user_id": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        }
+    }
+}

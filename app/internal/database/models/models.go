@@ -23,10 +23,20 @@ func GetRegisteredModels() []interface{} {
 
 type User struct {
 	gorm.Model
-	Login    string `gorm:"size:255;not null" json:"username"`
+	Login    string `gorm:"size:255;not null" json:"login"`
 	Password string `gorm:"size:255;not null" json:"-"`
+}
+
+type RefreshToken struct {
+	gorm.Model
+	Token     string `gorm:"uniqueIndex;size:255"`
+	UserID    uint
+	User      User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	UserAgent string
+	IpAdress  string
 }
 
 func init() {
 	registerModel(&User{})
+	registerModel(&RefreshToken{})
 }

@@ -5,17 +5,15 @@ import (
 	"log"
 	"os"
 
-	"github.com/joho/godotenv"
+	"github.com/OscarISTUedu/MEDODS_Service/internal"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+var DB *gorm.DB
+
 func Connect() (*gorm.DB, error) {
-	err := godotenv.Load("../../../docker/.env")
-	if err != nil {
-		fmt.Println("Ошибка:", err)
-		log.Fatal("Error loading .env file")
-	}
+	internal.LoadEnv()
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUser := os.Getenv("DB_USER")

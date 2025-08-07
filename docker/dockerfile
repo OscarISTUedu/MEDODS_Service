@@ -1,10 +1,40 @@
-FROM golang:1.20-alpine AS builder
+# Базовый образ для сборки Go приложения
+FROM golang:1.24.4-alpine AS builder
 
-RUN apk --no-cache add bash
+# Установка зависимостей
+RUN apk add --no-cache git ca-certificates
 
-COPY ["app/go.mod", "app/go.sum", "./"]
+# Рабочая директория внутри контейнера
+WORKDIR /app
+
+# Копируем файлы модулей для эффективного кэширования
+COPY app/go.mod app/go.sum ./
+
+# В конце builder-стадии:
+COPY ../docker/.env /app/.env
+
 RUN go mod download
 
-#build
-COPY app ./
-RUN go build -o ./bin/app cmd/app/main.go   
+# Копируем весь проект
+COPY app .
+
+# Собираем приложение
+RUN CGO_ENABLED=0 GOOS=linux go build -o /api ./cmd/api/main.go
+
+# Финальный легковесный образ
+FROM alpine:3.10
+
+# Установка зависимостей для runtime
+RUN apk --no-cache add ca-certificates
+
+# Копируем бинарник из builder
+COPY --from=builder /api /api
+
+# Или в финальном образе:
+COPY --from=builder /app/.env /app/.env	
+
+# Порт, который будет использоваться приложением
+EXPOSE 8080
+
+# Команда для запуска приложения
+CMD ["/api"]
